@@ -1,7 +1,7 @@
 /* খাবার ও স্বাস্থ্য: অফলাইনে খোলার জন্য সার্ভিস ওয়ার্কার।
-   অ্যাপের নিজের ফাইলগুলো ফোনে জমা রাখে; লগইন আর ডাটাবেসের অনুরোধ (Google, Firebase) সবসময় ইন্টারনেট দিয়ে যায়।
+   অ্যাপের নিজের ফাইলগুলো ফোনে জমা রাখে, তবে ইন্টারনেট থাকলে সবসময় নতুনটা আনে; লগইন আর ডাটাবেসের অনুরোধ (Google, Firebase) সবসময় ইন্টারনেট দিয়ে যায়।
    নতুন সংস্করণ তুললে নিচের VERSION বদলান। */
-const VERSION = 'khabar-2026-11-20-1';
+const VERSION = 'khabar-2026-11-21-2';
 const SHELL = ['./', 'index.html', 'account.js', 'firebase-config.js', 'privacy.html', 'manifest.webmanifest',
   'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 
@@ -25,8 +25,7 @@ self.addEventListener('fetch', e => {
       .catch(() => caches.match(req).then(r => r || caches.match('index.html'))));
     return;
   }
-  e.respondWith(caches.match(req).then(hit => {
-    const net = fetch(req).then(r => { if (r.ok) { const cp = r.clone(); caches.open(VERSION).then(c => c.put(req, cp)); } return r; });
-    return hit || net;
-  }));
+  // files: network first, so a new upload shows at once; the saved copy only when offline
+  e.respondWith(fetch(req, { cache: 'no-cache' }).then(r => { if (r.ok) { const cp = r.clone(); caches.open(VERSION).then(c => c.put(req, cp)); } return r; })
+    .catch(() => caches.match(req)));
 });
